@@ -16,11 +16,28 @@ public class ContentServer {
                 return;
             }
 
-            System.out.println("Data from file: " + weatherData);
+            // Convert data to JSON
+            String jsonData = convertToJson(weatherData);
+            System.out.println("JSON Data: " + jsonData);
 
         } catch (Exception e) {
             System.out.println("ContentServer exception: " + e.getMessage());
         }
+    }
+
+    private static String convertToJson(Map<String, String> dataMap) {
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        Iterator<Map.Entry<String, String>> iterator = dataMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, String> entry = iterator.next();
+            json.append("\"").append(entry.getKey()).append("\":\"").append(entry.getValue()).append("\"");
+            if (iterator.hasNext()) {
+                json.append(",");
+            }
+        }
+        json.append("}");
+        return json.toString();
     }
 
     private static Map<String, String> readDataFromFile(String filePath) {
@@ -40,3 +57,4 @@ public class ContentServer {
         }
     }
 }
+
