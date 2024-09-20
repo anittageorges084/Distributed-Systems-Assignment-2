@@ -1,3 +1,10 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+
 public class GETClient {
 
     public static void main(String[] args) {
@@ -27,10 +34,36 @@ public class GETClient {
             out.println();
 
             socket.close();
+            // Inside try block after sending the GET request
+            String statusLine = in.readLine();
+            if (statusLine == null) {
+                System.out.println("No response from server.");
+                return;
+            }
 
-        } catch (Exception e) {
-            System.out.println("Client exception: " + e.getMessage());
-        }
+            // Read headers
+            Map<String, String> headers = new HashMap<>();
+            String headerLine;
+            while (!(headerLine = in.readLine()).equals("")) {
+                String[] headerParts = headerLine.split(": ");
+                if (headerParts.length == 2) {
+                    headers.put(headerParts[0], headerParts[1]);
+                }
+            }
+
+            // Read response body
+            StringBuilder responseBody = new StringBuilder();
+            String line;
+            while ((line = in.readLine()) != null) {
+                responseBody.append(line);
+            }
+
+            System.out.println("Server response: " + responseBody.toString());
+
+
+                    } catch (Exception e) {
+                        System.out.println("Client exception: " + e.getMessage());
+                    }
     }
 }
 
