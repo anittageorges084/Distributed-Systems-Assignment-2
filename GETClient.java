@@ -1,11 +1,10 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 public class GETClient {
+
+    private static int lamportClock = 0;
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -28,13 +27,14 @@ public class GETClient {
             if (stationId != null) {
                 path += "?id=" + stationId;
             }
+            lamportClock++;
             out.println("GET " + path + " HTTP/1.1");
             out.println("Host: " + url.getHost());
+            out.println("Lamport-Clock: " + lamportClock);
             out.println("Connection: close");
             out.println();
 
-            socket.close();
-            // Inside try block after sending the GET request
+            // Read response
             String statusLine = in.readLine();
             if (statusLine == null) {
                 System.out.println("No response from server.");
@@ -51,6 +51,10 @@ public class GETClient {
                 }
             }
 
+            // Update Lamport clock
+            int serverLamportClock = Integer.parseInt(headers.getOrDefault("Lamport-Clock", "0"));
+            lamportClock = Math.max(lamportClock, serverLamportClock) + 1;
+
             // Read response body
             StringBuilder responseBody = new StringBuilder();
             String line;
@@ -58,24 +62,36 @@ public class GETClient {
                 responseBody.append(line);
             }
 
-            System.out.println("Server response: " + responseBody.toString());
+            // Parse and display data
+            parseAndDisplayJson(responseBody.toString());
 
+            socket.close();
 
-                    } catch (Exception e) {
-                        System.out.println("Client exception: " + e.getMessage());
-                    }
+        } catch (Exception e) {
+            System.out.println("Client exception: " + e.getMessage());
+        }
+    }
+
+    private static void parseAndDisplayJson(String json) {
+        // Assuming the response is a JSON array
+        json = json.trim();
+        if (json.startsWith("[")) {
+            json = json.substring(1, json.length() - 1);
+        }
+
+        String[] objects = json.split("\\},\\{");
+        for (String obj : objects) {
+            obj = obj.replaceAll("\\{|\\}", "");
+            String[] pairs = obj.split(",");
+            for (String pair : pairs) {
+                String[] kv = pair.split(":", 2);
+                if (kv.length == 2) {
+                    String key = kv[0].trim().replaceAll("\"", "");
+                    String value = kv[1].trim().replaceAll("\"", "");
+                    System.out.println(key + ": " + value);
+                }
+            }
+            System.out.println("-------------------------");
+        }
     }
 }
-private static int lamportClock = 0;
-
-// Inside try block after reading arguments
-lamportClock++;
-out.println("Lamport-Clock: " + lamportClock);
-
-// After reading headers
-int serverLamportClock = Integer.parseInt(headers.getOrDefault("Lamport-Clock", "0"));
-lamportClock = Math.max(lamportClock, serverLamportClock) + 1;
-
-System.out.println("Updated Lamport Clock: " + lamportClock);
-
-
