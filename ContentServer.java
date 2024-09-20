@@ -1,12 +1,13 @@
 public class ContentServer {
 
     public static void main(String[] args) {
-        if (args.length < 1) {
-            System.out.println("Usage: java ContentServer <file-path>");
+        if (args.length < 2) {
+            System.out.println("Usage: java ContentServer <server-url> <file-path>");
             return;
         }
 
-        String filePath = args[0];
+        String serverUrl = args[0];
+        String filePath = args[1];
 
         try {
             // Read data from file
@@ -18,10 +19,44 @@ public class ContentServer {
 
             // Convert data to JSON
             String jsonData = convertToJson(weatherData);
-            System.out.println("JSON Data: " + jsonData);
+
+            // Send PUT request
+            sendPutRequest(serverUrl, jsonData);
 
         } catch (Exception e) {
             System.out.println("ContentServer exception: " + e.getMessage());
+        }
+    }
+
+    private static void sendPutRequest(String serverUrl, String jsonData) {
+        try {
+            URL url = new URL(serverUrl);
+            Socket socket = new Socket(url.getHost(), url.getPort() == -1 ? 80 : url.getPort());
+
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // Send PUT request
+            out.println("PUT " + url.getPath() + " HTTP/1.1");
+            out.println("Host: " + url.getHost());
+            out.println("Content-Type: application/json");
+            out.println("Content-Length: " + jsonData.getBytes().length);
+            out.println("Connection: close");
+            out.println();
+            out.println(jsonData);
+
+            // Read response
+            String statusLine = in.readLine();
+            if (statusLine == null) {
+                System.out.println("No response from server.");
+                return;
+            }
+            System.out.println("Server response: " + statusLine);
+
+            socket.close();
+
+        } catch (Exception e) {
+            System.out.println("Error in sendPutRequest: " + e.getMessage());
         }
     }
 
@@ -57,4 +92,5 @@ public class ContentServer {
         }
     }
 }
+
 
