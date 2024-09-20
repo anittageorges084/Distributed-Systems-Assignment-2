@@ -66,4 +66,16 @@ public class GETClient {
                     }
     }
 }
+private static int lamportClock = 0;
+
+// Inside try block after reading arguments
+lamportClock++;
+out.println("Lamport-Clock: " + lamportClock);
+
+// After reading headers
+int serverLamportClock = Integer.parseInt(headers.getOrDefault("Lamport-Clock", "0"));
+lamportClock = Math.max(lamportClock, serverLamportClock) + 1;
+
+System.out.println("Updated Lamport Clock: " + lamportClock);
+
 
