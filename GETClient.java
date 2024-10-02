@@ -2,12 +2,15 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class GETClient {
+public class GETClient 
+{
 
     private static int lamportClock = 0;
 
-    public static void main(String[] args) {
-        if (args.length < 1) {
+    public static void main(String[] args) 
+    {
+        if (args.length < 1) 
+        {
             System.out.println("Usage: java GETClient <server-url> [station-id]");
             return;
         }
@@ -15,7 +18,8 @@ public class GETClient {
         String serverUrl = args[0];
         String stationId = args.length > 1 ? args[1] : null;
 
-        try {
+        try 
+        {
             URL url = new URL(serverUrl);
             Socket socket = new Socket(url.getHost(), url.getPort() == -1 ? 80 : url.getPort());
 
@@ -24,7 +28,8 @@ public class GETClient {
 
             // Send GET request
             String path = url.getPath();
-            if (stationId != null) {
+            if (stationId != null) 
+            {
                 path += "?id=" + stationId;
             }
             lamportClock++;
@@ -36,7 +41,8 @@ public class GETClient {
 
             // Read response
             String statusLine = in.readLine();
-            if (statusLine == null) {
+            if (statusLine == null) 
+            {
                 System.out.println("No response from server.");
                 return;
             }
@@ -44,9 +50,11 @@ public class GETClient {
             // Read headers
             Map<String, String> headers = new HashMap<>();
             String headerLine;
-            while (!(headerLine = in.readLine()).equals("")) {
+            while (!(headerLine = in.readLine()).equals("")) 
+            {
                 String[] headerParts = headerLine.split(": ");
-                if (headerParts.length == 2) {
+                if (headerParts.length == 2) 
+                {
                     headers.put(headerParts[0], headerParts[1]);
                 }
             }
@@ -58,7 +66,8 @@ public class GETClient {
             // Read response body
             StringBuilder responseBody = new StringBuilder();
             String line;
-            while ((line = in.readLine()) != null) {
+            while ((line = in.readLine()) != null) 
+            {
                 responseBody.append(line);
             }
 
@@ -67,25 +76,31 @@ public class GETClient {
 
             socket.close();
 
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             System.out.println("Client exception: " + e.getMessage());
         }
     }
 
-    private static void parseAndDisplayJson(String json) {
+    private static void parseAndDisplayJson(String json) 
+    {
         // Assuming the response is a JSON array
         json = json.trim();
-        if (json.startsWith("[")) {
+        if (json.startsWith("[")) 
+        {
             json = json.substring(1, json.length() - 1);
         }
 
         String[] objects = json.split("\\},\\{");
-        for (String obj : objects) {
+        for (String obj : objects) 
+        {
             obj = obj.replaceAll("\\{|\\}", "");
             String[] pairs = obj.split(",");
             for (String pair : pairs) {
                 String[] kv = pair.split(":", 2);
-                if (kv.length == 2) {
+                if (kv.length == 2) 
+                {
                     String key = kv[0].trim().replaceAll("\"", "");
                     String value = kv[1].trim().replaceAll("\"", "");
                     System.out.println(key + ": " + value);

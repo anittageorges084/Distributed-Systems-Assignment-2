@@ -2,12 +2,14 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class ContentServer {
-
+public class ContentServer 
+{
     private static int lamportClock = 0;
 
-    public static void main(String[] args) {
-        if (args.length < 2) {
+    public static void main(String[] args) 
+    {
+        if (args.length < 2) 
+        {
             System.out.println("Usage: java ContentServer <server-url> <file-path>");
             return;
         }
@@ -15,10 +17,12 @@ public class ContentServer {
         String serverUrl = args[0];
         String filePath = args[1];
 
-        try {
+        try 
+        {
             // Read data from file
             Map<String, String> weatherData = readDataFromFile(filePath);
-            if (weatherData == null) {
+            if (weatherData == null) 
+            {
                 System.out.println("Failed to read data from file.");
                 return;
             }
@@ -28,36 +32,47 @@ public class ContentServer {
             // Send PUT request
             sendPutRequest(serverUrl, jsonData);
 
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             System.out.println("ContentServer exception: " + e.getMessage());
         }
     }
 
-    private static Map<String, String> readDataFromFile(String filePath) {
+    private static Map<String, String> readDataFromFile(String filePath) 
+    {
         Map<String, String> dataMap = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) 
+        {
             String line;
-            while ((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null) 
+            {
                 String[] kv = line.split(":", 2);
-                if (kv.length == 2) {
+                if (kv.length == 2) 
+                {
                     dataMap.put(kv[0].trim(), kv[1].trim());
                 }
             }
             return dataMap;
-        } catch (IOException e) {
+        } 
+        catch (IOException e) 
+        {
             System.out.println("Error reading file: " + e.getMessage());
             return null;
         }
     }
 
-    private static String convertToJson(Map<String, String> dataMap) {
+    private static String convertToJson(Map<String, String> dataMap) 
+    {
         StringBuilder json = new StringBuilder();
         json.append("{");
         Iterator<Map.Entry<String, String>> iterator = dataMap.entrySet().iterator();
-        while (iterator.hasNext()) {
+        while (iterator.hasNext()) 
+        {
             Map.Entry<String, String> entry = iterator.next();
             json.append("\"").append(entry.getKey()).append("\":\"").append(entry.getValue()).append("\"");
-            if (iterator.hasNext()) {
+            if (iterator.hasNext()) 
+            {
                 json.append(",");
             }
         }
@@ -65,9 +80,12 @@ public class ContentServer {
         return json.toString();
     }
 
-    private static void sendPutRequest(String serverUrl, String jsonData) {
-        try {
-            URL url = new URL(serverUrl);
+    private static void sendPutRequest(String serverUrl, String jsonData) 
+    {
+        try 
+        {
+            URI uri = new URI(serverUrl);
+            URL url = uri.toURL();
             Socket socket = new Socket(url.getHost(), url.getPort() == -1 ? 80 : url.getPort());
 
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -86,7 +104,8 @@ public class ContentServer {
 
             // Read response
             String statusLine = in.readLine();
-            if (statusLine == null) {
+            if (statusLine == null) 
+            {
                 System.out.println("No response from server.");
                 return;
             }
@@ -94,9 +113,11 @@ public class ContentServer {
             // Read headers
             Map<String, String> headers = new HashMap<>();
             String headerLine;
-            while (!(headerLine = in.readLine()).equals("")) {
+            while (!(headerLine = in.readLine()).equals("")) 
+            {
                 String[] headerParts = headerLine.split(": ");
-                if (headerParts.length == 2) {
+                if (headerParts.length == 2) 
+                {
                     headers.put(headerParts[0], headerParts[1]);
                 }
             }
@@ -108,7 +129,8 @@ public class ContentServer {
             // Read response body
             StringBuilder responseBody = new StringBuilder();
             String line;
-            while ((line = in.readLine()) != null) {
+            while ((line = in.readLine()) != null) 
+            {
                 responseBody.append(line);
             }
 
@@ -116,7 +138,9 @@ public class ContentServer {
 
             socket.close();
 
-        } catch (Exception e) {
+        } 
+        catch (Exception e) 
+        {
             System.out.println("Error in sendPutRequest: " + e.getMessage());
         }
     }

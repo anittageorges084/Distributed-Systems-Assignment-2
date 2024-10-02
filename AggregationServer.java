@@ -4,8 +4,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AggregationServer {
-
+public class AggregationServer 
+{
     // Lamport clock
     private AtomicInteger lamportClock = new AtomicInteger(0);
 
@@ -15,79 +15,97 @@ public class AggregationServer {
     // Port number
     private int port;
 
-    public AggregationServer(int port) {
+    public AggregationServer(int port) 
+    {
         this.port = port;
     }
 
-    public static void main(String[] args) {
-        int portNumber = 8080; // Default port
-        if (args.length > 0) {
-            portNumber = Integer.parseInt(args[0]);
+    public static void main(String[] args) 
+    {
+        int port = 8080; // Default port
+        if (args.length > 0) 
+        {
+            port = Integer.parseInt(args[0]);
         }
-        AggregationServer server = new AggregationServer(portNumber);
+        AggregationServer server = new AggregationServer(port);
         server.startServer();
     }
 
-    public void startServer() {
+    public void startServer() 
+    {
         // Start data expiration thread
-        startDataExpirationTask();
+        DataExpiration();
 
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) 
+        {
             System.out.println("Aggregation Server is listening on port " + port);
 
-            while (true) {
+            while (true) 
+            {
                 Socket socket = serverSocket.accept();
                 new ServerHandler(socket, this).start();
             }
-        } catch (IOException ex) {
+        } 
+        catch (IOException ex) 
+        {
             System.out.println("Server exception: " + ex.getMessage());
         }
     }
 
     // Method to update Lamport clock
-    public synchronized int updateLamportClock(int receivedClock) {
+    public synchronized int updateLamportClock(int receivedClock) 
+    {
         int currentClock = lamportClock.get();
         lamportClock.set(Math.max(currentClock, receivedClock) + 1);
         return lamportClock.get();
     }
 
     // Method to get current Lamport clock
-    public int getLamportClock() {
+    public int getLamportClock() 
+    {
         return lamportClock.get();
     }
 
     // Methods to access weather data map
-    public ConcurrentHashMap<String, WeatherStationData> getWeatherDataMap() {
+    public ConcurrentHashMap<String, WeatherStationData> getWeatherDataMap() 
+    {
         return weatherDataMap;
     }
 
     // Start data expiration task
-    private void startDataExpirationTask() {
+    private void DataExpiration() 
+    {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(() -> {
+        scheduler.scheduleAtFixedRate(() -> 
+        {
             long currentTime = System.currentTimeMillis();
             weatherDataMap.values().removeIf(data ->
-                    currentTime - data.getLastUpdateTime() > 30000); // 30 seconds
+                    currentTime - data.getUpdate() > 30000); // 30 seconds
         }, 30, 30, TimeUnit.SECONDS);
     }
 }
 
 // Thread to handle client requests
-class ServerHandler extends Thread {
+class ServerHandler extends Thread 
+{
     private Socket socket;
     private AggregationServer server;
 
-    public ServerHandler(Socket socket, AggregationServer server) {
+    public ServerHandler(Socket socket, AggregationServer server) 
+    {
         this.socket = socket;
         this.server = server;
     }
 
-    public void run() {
+    public void run() 
+    {
         try (
-            BufferedReader in = new BufferedReader(
+            BufferedReader in = new BufferedReader
+            (
                     new InputStreamReader(socket.getInputStream()));
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-        ) {
+        ) 
+        {
             // Read request line
             String requestLine = in.readLine();
             if (requestLine == null) return;
@@ -95,9 +113,11 @@ class ServerHandler extends Thread {
             // Read headers
             Map<String, String> headers = new HashMap<>();
             String headerLine;
-            while (!(headerLine = in.readLine()).equals("")) {
+            while (!(headerLine = in.readLine()).equals("")) 
+            {
                 String[] headerParts = headerLine.split(": ");
-                if (headerParts.length == 2) {
+                if (headerParts.length == 2) 
+                {
                     headers.put(headerParts[0], headerParts[1]);
                 }
             }
@@ -107,15 +127,21 @@ class ServerHandler extends Thread {
             int serverLamportClock = server.updateLamportClock(clientLamportClock);
 
             // Handle request
-            if (requestLine.startsWith("PUT")) {
+            if (requestLine.startsWith("PUT")) 
+            {
                 handlePutRequest(in, headers, out, serverLamportClock);
-            } else if (requestLine.startsWith("GET")) {
+            } 
+            else if (requestLine.startsWith("GET")) 
+            {
                 handleGetRequest(out, serverLamportClock);
-            } else {
+            } else 
+            {
                 sendResponse(out, "HTTP/1.1 400 Bad Request", "Invalid request method.", serverLamportClock);
             }
 
-        } catch (IOException e) {
+        } 
+        catch (IOException e) 
+        {
             System.out.println("Exception in handler: " + e.getMessage());
         }
     }
@@ -140,12 +166,13 @@ class ServerHandler extends Thread {
 
             synchronized (stationData) {
                 stationData.updateData(weatherData);
-                stationData.setLamportClock(serverLamportClock);
-                stationData.setLastUpdateTime(System.currentTimeMillis());
+                stationData.setClock(serverLamportClock);
+                stationData.setUpdate(System.currentTimeMillis());
             }
 
             sendResponse(out, "HTTP/1.1 200 OK", "Data updated successfully.", serverLamportClock);
-        } else {
+        } else 
+        {
             sendResponse(out, "HTTP/1.1 400 Bad Request", "Station ID is missing.", serverLamportClock);
         }
     }
@@ -160,7 +187,8 @@ class ServerHandler extends Thread {
             WeatherStationData data = iterator.next();
             synchronized (data) {
                 responseBody.append(data.toJson());
-                if (iterator.hasNext()) {
+                if (iterator.hasNext()) 
+                {
                     responseBody.append(",");
                 }
             }
@@ -210,7 +238,8 @@ class WeatherStationData {
     private long lastUpdateTime;
     private LinkedList<Map<String, String>> recentUpdates = new LinkedList<>();
 
-    public synchronized void updateData(Map<String, String> newData) {
+    public synchronized void updateData(Map<String, String> newData) 
+    {
         data.putAll(newData);
         recentUpdates.add(new HashMap<>(newData));
         if (recentUpdates.size() > 20) {
@@ -218,14 +247,16 @@ class WeatherStationData {
         }
     }
 
-    public synchronized String toJson() {
+    public synchronized String toJson() 
+    {
         StringBuilder json = new StringBuilder();
         json.append("{");
         Iterator<Map.Entry<String, String>> iterator = data.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, String> entry = iterator.next();
             json.append("\"").append(entry.getKey()).append("\":\"").append(entry.getValue()).append("\"");
-            if (iterator.hasNext()) {
+            if (iterator.hasNext()) 
+            {
                 json.append(",");
             }
         }
@@ -233,19 +264,19 @@ class WeatherStationData {
         return json.toString();
     }
 
-    public int getLamportClock() {
+    public int getClock() {
         return lamportClock;
     }
 
-    public void setLamportClock(int lamportClock) {
+    public void setClock(int lamportClock) {
         this.lamportClock = lamportClock;
     }
 
-    public long getLastUpdateTime() {
+    public long getUpdate() {
         return lastUpdateTime;
     }
 
-    public void setLastUpdateTime(long lastUpdateTime) {
+    public void setUpdate(long lastUpdateTime) {
         this.lastUpdateTime = lastUpdateTime;
     }
 }
