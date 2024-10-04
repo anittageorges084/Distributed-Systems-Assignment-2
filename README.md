@@ -95,5 +95,12 @@ Paste the code for ContentServer.java into the class file.
 Create weather.txt:
 In your project directory, create a file named weather.txt.
 
-Paste the weather data in the specified format:
+## References:
+ChatGPT for understanding how GET and PUT requests work, converting text to json, how to run code on Maven Eclipse, understanding lamport clocks, general guidance on implementing and applying code solutions, refining the comments in the code.
+
+Lamport, Leslie. "Time, Clocks, and the Ordering of Events in a Distributed System." Massachusetts Computer Associates, Inc.
+
+Stack Overflow: Solutions and code snippets to errors encountered during implementations found from discussions and examples available on Stack Overflow.
+
+Github : References were taken from certain Github repositories to help in getting ideas on how to implement the solutions.
 
